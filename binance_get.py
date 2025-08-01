@@ -8,6 +8,8 @@ from urllib.parse import urlencode
 BASE_URL = "https://api.binance.com"
 
 def get_signature(query_string, api_secret):
+    if not api_secret or not query_string:
+        raise ValueError("API secret and query string must not be None or empty")
     return hmac.new(api_secret.encode(), query_string.encode(), hashlib.sha256).hexdigest()
 
 def get_flexible_position(api_key, api_secret):
