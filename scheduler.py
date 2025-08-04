@@ -2,7 +2,7 @@ import schedule
 import time
 import subprocess
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 # Set up logging
 logging.basicConfig(
@@ -13,6 +13,29 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+def get_gmt_plus_7_time():
+    """Get current time in GMT+7"""
+    utc_now = datetime.now(timezone.utc)
+    gmt_plus_7 = utc_now + timedelta(hours=7)
+    return gmt_plus_7
+
+def get_local_time_for_gmt_plus_7(gmt_plus_7_hour, gmt_plus_7_minute=0):
+    """Convert GMT+7 time to local time for scheduling"""
+    # Get current GMT+7 time
+    gmt_plus_7_now = get_gmt_plus_7_time()
+    
+    # Create target time in GMT+7
+    target_gmt_plus_7 = gmt_plus_7_now.replace(
+        hour=gmt_plus_7_hour, 
+        minute=gmt_plus_7_minute, 
+        second=0, 
+        microsecond=0
+    )
+    
+    # Convert to local time
+    local_time = target_gmt_plus_7 - timedelta(hours=7)
+    return local_time.strftime("%H:%M")
 
 def run_worker_server():
     """Run the main worker server"""
@@ -100,18 +123,20 @@ def run_deposit_withdraw_sheet_updater():
         logging.error(f"Error running deposit_withdraw_sheet_updater.py: {e}")
 
 def main():
+    # Calculate local time equivalent to 23:00 GMT+7
+    local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
+    
     logging.info("Starting scheduler - Worker server will run every 60 minutes")
-    logging.info("db_staking_wallet.py and staking_wallet_updater.py will run daily at 23:00 GMT+7")
-    logging.info("db_deposit_withdraw_history.py and deposit_withdraw_sheet_updater.py will run daily at 23:00 GMT+7")
+    logging.info(f"All scripts will run daily at 23:00 GMT+7 (which is {local_time_23_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
     schedule.every(60).minutes.do(run_worker_server)
     
-    # Schedule db_staking_wallet.py and staking_wallet_updater.py to run at 23:00 GMT+7 daily
-    schedule.every().day.at("23:00").do(run_db_staking_wallet)
-    schedule.every().day.at("23:00").do(run_staking_wallet_updater)
-    schedule.every().day.at("23:00").do(run_db_deposit_withdraw_history)
-    schedule.every().day.at("23:00").do(run_deposit_withdraw_sheet_updater)
+    # Schedule all scripts to run at 23:00 GMT+7 (converted to local time)
+    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_staking_wallet)
+    schedule.every().day.at(local_time_23_00_gmt7).do(run_staking_wallet_updater)
+    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_deposit_withdraw_history)
+    schedule.every().day.at(local_time_23_00_gmt7).do(run_deposit_withdraw_sheet_updater)
 
     # Run immediately on startup
     logging.info("Running initial execution...")
