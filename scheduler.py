@@ -133,10 +133,10 @@ def main():
     schedule.every(60).minutes.do(run_worker_server)
     
     # Schedule all scripts to run at 23:00 GMT+7 (converted to local time)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_staking_wallet)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_staking_wallet_updater)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_deposit_withdraw_history)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_deposit_withdraw_sheet_updater)
+    schedule.every(60 * 24).minutes.do(run_db_staking_wallet)
+    schedule.every(60 * 24).minutes.do(run_staking_wallet_updater)
+    schedule.every(60 * 24).minutes.do(run_db_deposit_withdraw_history)
+    schedule.every(60 * 24).minutes.do(run_deposit_withdraw_sheet_updater)
 
     # Run immediately on startup
     logging.info("Running initial execution...")
