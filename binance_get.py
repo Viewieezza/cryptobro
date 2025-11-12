@@ -255,3 +255,53 @@ def get_coinm_position_risk(api_key, api_secret, marginAsset=None, pair=None, re
             "error": f"HTTP {response.status_code}",
             "message": response.text
         }
+
+def get_usdtm_position_risk(api_key, api_secret, symbol=None, recvWindow=None):
+    """
+    Retrieve USDT-M (Perpetual) Futures position risk info via /fapi/v2/positionRisk
+
+    Official docs:
+    https://binance-docs.github.io/apidocs/futures/en/#position-information-user_data
+
+    Parameters:
+    - api_key (str): Binance API key
+    - api_secret (str): Binance API secret
+    - symbol (str, optional): Filter by symbol (e.g. "BTCUSDT")
+    - recvWindow (int, optional): The number of milliseconds the request is valid for
+    """
+    USDTM_BASE_URL = "https://fapi.binance.com"
+    endpoint = "/fapi/v2/positionRisk"
+
+    # Build query params
+    timestamp = int(time.time() * 1000)
+    params = {"timestamp": timestamp}
+    if symbol:
+        params["symbol"] = symbol
+    if recvWindow:
+        params["recvWindow"] = recvWindow
+
+    # Convert dict to query string
+    query_string = urlencode(params)
+
+    # Sign the query
+    signature = hmac.new(
+        api_secret.encode("utf-8"),
+        query_string.encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()
+
+    # Construct final URL
+    url = f"{USDTM_BASE_URL}{endpoint}?{query_string}&signature={signature}"
+
+    # Make request
+    headers = {"X-MBX-APIKEY": api_key}
+    response = requests.get(url, headers=headers)
+
+    # Attempt JSON parse if valid; otherwise return raw info
+    if "application/json" in response.headers.get("Content-Type", ""):
+        return response.json()
+    else:
+        return {
+            "error": f"HTTP {response.status_code}",
+            "message": response.text
+        }

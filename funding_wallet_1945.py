@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import logging
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from binance_get import get_asset_price, get_coinm_position_risk
+from binance_get import get_asset_price, get_coinm_position_risk, get_usdtm_position_risk
 import time
 import base64
 import json
@@ -135,8 +135,8 @@ class FundingRateProcessor:
                     logger.error(f"Failed to call Binance API after {max_attempts} attempts")
                     return None
     
-    def get_binance_data(self) -> tuple[Optional[List], Optional[float]]:
-        """Get Binance position data and BTC price"""
+    def get_binance_data(self) -> tuple[Optional[List], Optional[List], Optional[float]]:
+        """Get Binance position data (both Coin-M and USDT perpetual) and BTC price"""
         try:
             # Get coinm positions
             coinm_positions = self.execute_binance_api_with_retry(
@@ -148,10 +148,25 @@ class FundingRateProcessor:
             
             # Validate coinm positions response
             if isinstance(coinm_positions, dict) and 'error' in coinm_positions:
-                raise APIError(f"API Error: {coinm_positions}")
+                raise APIError(f"Coin-M API Error: {coinm_positions}")
             
             if not isinstance(coinm_positions, list):
-                raise APIError(f"Unexpected data structure: {coinm_positions}")
+                raise APIError(f"Unexpected Coin-M data structure: {coinm_positions}")
+            
+            # Get USDT perpetual positions
+            usdtm_positions = self.execute_binance_api_with_retry(
+                get_usdtm_position_risk, self.api_key, self.api_secret
+            )
+            
+            if usdtm_positions is None:
+                raise APIError("Failed to get USDT perpetual positions")
+            
+            # Validate USDT perpetual positions response
+            if isinstance(usdtm_positions, dict) and 'error' in usdtm_positions:
+                raise APIError(f"USDT Perpetual API Error: {usdtm_positions}")
+            
+            if not isinstance(usdtm_positions, list):
+                raise APIError(f"Unexpected USDT perpetual data structure: {usdtm_positions}")
             
             # Get BTC price
             btc_price_data = self.execute_binance_api_with_retry(get_asset_price, "BTCUSDT")
@@ -160,8 +175,8 @@ class FundingRateProcessor:
             
             btc_price = btc_price_data.get('price') if isinstance(btc_price_data, dict) else btc_price_data
             
-            logger.info(f"Successfully retrieved Binance data. BTC Price: {btc_price}")
-            return coinm_positions, btc_price
+            logger.info(f"Successfully retrieved Binance data. Coin-M positions: {len(coinm_positions)}, USDT Perpetual positions: {len(usdtm_positions)}, BTC Price: {btc_price}")
+            return coinm_positions, usdtm_positions, btc_price
             
         except Exception as e:
             logger.error(f"Failed to get Binance data: {e}")
@@ -182,38 +197,43 @@ class FundingRateProcessor:
         
         return True
     
-    def find_matching_position(self, contract_symbol: str, coinm_positions: List[Dict]) -> Optional[Dict]:
-        """Find matching position in coinm positions"""
+    def find_matching_position(self, contract_symbol: str, coinm_positions: List[Dict], usdtm_positions: List[Dict]) -> tuple[Optional[Dict], str]:
+        """Find matching position in both Coin-M and USDT perpetual positions"""
+        # First search in Coin-M positions
         for position in coinm_positions:
             if isinstance(position, dict) and position.get('symbol') == contract_symbol:
-                return position
-        return None
+                return position, "coinm"
+        
+        # Then search in USDT perpetual positions
+        for position in usdtm_positions:
+            if isinstance(position, dict) and position.get('symbol') == contract_symbol:
+                return position, "usdtm"
+        
+        return None, "none"
     
-    def process_position_data(self, matching_position: Dict) -> tuple[float, float, float, float, float]:
+    def process_position_data(self, matching_position: Dict, position_type: str) -> tuple[float, float, float, float, float]:
         """Extract and calculate position data"""
         try:
-            isolated_wallet = float(matching_position.get('isolatedWallet', 0))
+            isolated_margin = float(matching_position.get('isolatedMargin', 0))
             entry_price = float(matching_position.get('entryPrice', 0))
             mark_price = float(matching_position.get('markPrice', 0))
+            position_size = float(matching_position.get('positionAmt', 0))*mark_price
             unrealized_pnl = float(matching_position.get('unRealizedProfit', 0))
-            isolated_margin = float(matching_position.get('isolatedMargin', 0))
-            # Calculate Isolated Margin * markPrice
-            calculated_value = isolated_margin * mark_price
             
-            return isolated_wallet, entry_price, mark_price, calculated_value, unrealized_pnl
+            return isolated_margin, entry_price, mark_price, position_size, unrealized_pnl
         except (ValueError, TypeError) as e:
             logger.error(f"Error processing position data: {e}")
             raise
     
-    def update_sheet_row(self, row_index: int, isolated_wallet: float, entry_price: float, 
-                        mark_price: float, calculated_value: float, unrealized_pnl: float) -> bool:
+    def update_sheet_row(self, row_index: int, isolated_margin: float, entry_price: float, 
+                        mark_price: float, position_size: float, unrealized_pnl: float) -> bool:
         """Update sheet row with position data"""
         try:
             # Update columns I, J, K, L, and M
-            success_i = self.update_cell_with_retry(row_index, 9, isolated_wallet)      # Column I - Isolated Wallet
+            success_i = self.update_cell_with_retry(row_index, 9, isolated_margin)      # Column I - Margin
             success_j = self.update_cell_with_retry(row_index, 10, entry_price)         # Column J - Entry Price
             success_k = self.update_cell_with_retry(row_index, 11, mark_price)          # Column K - Mark Price
-            success_l = self.update_cell_with_retry(row_index, 12, calculated_value)    # Column L - Isolated Margin * markPrice
+            success_l = self.update_cell_with_retry(row_index, 12, position_size)       # Column L - Position Size
             success_m = self.update_cell_with_retry(row_index, 13, unrealized_pnl)      # Column M - Unrealized P&L
             
             if all([success_i, success_j, success_k, success_l, success_m]):
@@ -227,7 +247,7 @@ class FundingRateProcessor:
             logger.error(f"Error updating sheet row {row_index}: {e}")
             return False
     
-    def process_sheet_data(self, coinm_positions: List[Dict]) -> None:
+    def process_sheet_data(self, coinm_positions: List[Dict], usdtm_positions: List[Dict]) -> None:
         """Process all sheet data"""
         try:
             all_values = self.sheet.get_all_values()
@@ -248,24 +268,24 @@ class FundingRateProcessor:
                         skipped_count += 1
                         continue
                     
-                    # Find matching position
-                    matching_position = self.find_matching_position(contract_symbol, coinm_positions)
+                    # Find matching position in both Coin-M and USDT perpetual
+                    matching_position, position_type = self.find_matching_position(contract_symbol, coinm_positions, usdtm_positions)
                     
                     if matching_position:
                         # Process position data
-                        isolated_wallet, entry_price, mark_price, calculated_value, unrealized_pnl = self.process_position_data(matching_position)
+                        isolated_margin, entry_price, mark_price, position_size, unrealized_pnl = self.process_position_data(matching_position, position_type)
                         
                         # Update sheet
-                        if self.update_sheet_row(row_index, isolated_wallet, entry_price, mark_price, calculated_value, unrealized_pnl):
+                        if self.update_sheet_row(row_index, isolated_margin, entry_price, mark_price, position_size, unrealized_pnl):
                             processed_count += 1
-                            logger.info(f"Processed: Wallet={wallet}, Symbol={contract_symbol}, "
-                                      f"Isolated Margin={isolated_wallet}, Entry Price={entry_price}, "
-                                      f"Mark Price={mark_price}, Calculated Value={calculated_value}, "
+                            logger.info(f"Processed: Wallet={wallet}, Symbol={contract_symbol}, Type={position_type}, "
+                                      f"Margin={isolated_margin}, Entry Price={entry_price}, "
+                                      f"Mark Price={mark_price}, Position Size={position_size}, "
                                       f"Unrealized P&L={unrealized_pnl}")
                         else:
                             logger.error(f"Failed to update sheet for {contract_symbol}")
                     else:
-                        logger.warning(f"No position data found for {contract_symbol}")
+                        logger.warning(f"No position data found for {contract_symbol} in either Coin-M or USDT perpetual")
                         skipped_count += 1
                         
                 except Exception as e:
@@ -292,12 +312,13 @@ class FundingRateProcessor:
             logger.info("Google Sheets setup completed")
             
             # Get Binance data
-            coinm_positions, btc_price = self.get_binance_data()
-            print(coinm_positions)
+            coinm_positions, usdtm_positions, btc_price = self.get_binance_data()
+            print(f"Coin-M positions: {coinm_positions}")
+            print(f"USDT Perpetual positions: {usdtm_positions}")
             logger.info("Binance data retrieved successfully")
             
-            # Process sheet data - removed btc_price parameter since it's no longer needed
-            self.process_sheet_data(coinm_positions)
+            # Process sheet data with both position types
+            self.process_sheet_data(coinm_positions, usdtm_positions)
             logger.info("Sheet processing completed successfully")
             
         except ConfigError as e:
