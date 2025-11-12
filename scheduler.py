@@ -122,12 +122,33 @@ def run_deposit_withdraw_sheet_updater():
     except Exception as e:
         logging.error(f"Error running deposit_withdraw_sheet_updater.py: {e}")
 
+def run_alp_price_scraper():
+    """Run the alp_price_scraper.py script"""
+    try:
+        logging.info("Starting alp_price_scraper.py execution...")
+        result = subprocess.run(["python", "alp_price_scraper.py"], capture_output=True, text=True)
+        
+        if result.stdout:
+            logging.info(f"alp_price_scraper.py output:\n{result.stdout}")
+        
+        if result.stderr:
+            logging.warning(f"alp_price_scraper.py stderr:\n{result.stderr}")
+            
+        logging.info("alp_price_scraper.py execution completed successfully")
+        
+    except Exception as e:
+        logging.error(f"Error running alp_price_scraper.py: {e}")
+
 def main():
     # Calculate local time equivalent to 23:00 GMT+7
     local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
     
+    # Calculate local time equivalent to 00:00 GMT+7
+    local_time_00_00_gmt7 = get_local_time_for_gmt_plus_7(0, 0)
+    
     logging.info("Starting scheduler - Worker server will run every 60 minutes")
     logging.info(f"All scripts will run daily at 23:00 GMT+7 (which is {local_time_23_00_gmt7} local time)")
+    logging.info(f"ALP price scraper will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
     schedule.every(60).minutes.do(run_worker_server)
@@ -137,6 +158,9 @@ def main():
     schedule.every().day.at(local_time_23_00_gmt7).do(run_staking_wallet_updater)
     schedule.every().day.at(local_time_23_00_gmt7).do(run_db_deposit_withdraw_history)
     schedule.every().day.at(local_time_23_00_gmt7).do(run_deposit_withdraw_sheet_updater)
+    
+    # Schedule ALP price scraper to run daily at 00:00 GMT+7
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
 
     # Run immediately on startup
     logging.info("Running initial execution...")
