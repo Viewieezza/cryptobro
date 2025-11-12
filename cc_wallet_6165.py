@@ -39,7 +39,7 @@ class CashAndCarryProcessor:
         self.client = None
         self.api_key = None
         self.api_secret = None
-        self.wallet_name = 'Wallet 1'
+        self.wallet_name = 'Wallet 1 (6165)'
         self.worksheet_title = 'Cash&Carry'
         
     def load_environment(self) -> None:
