@@ -11,6 +11,9 @@ import json
 from typing import Optional, Dict, Any
 from datetime import datetime
 import re
+import subprocess
+import sys
+import glob
 
 # Try to import playwright (for JavaScript rendering)
 try:
@@ -126,15 +129,100 @@ class ALPPriceScraper:
         except Exception as e:
             raise GoogleSheetsError(f"Failed to setup Google Sheets: {str(e)}")
     
+    def _ensure_playwright_browsers(self) -> None:
+        """Ensure Playwright browsers are installed"""
+        try:
+            logger.info("Checking if Playwright browsers are installed...")
+            with sync_playwright() as p:
+                # Try to get browser path - this will fail if browsers aren't installed
+                try:
+                    browser_path = p.chromium.executable_path
+                    if os.path.exists(browser_path):
+                        logger.info(f"Playwright browser found at: {browser_path}")
+                        return
+                    else:
+                        logger.warning(f"Browser path exists but file not found: {browser_path}")
+                        raise FileNotFoundError(f"Browser executable not found at {browser_path}")
+                except Exception as e:
+                    logger.warning(f"Browser not found: {e}")
+                    raise
+        except Exception as e:
+            logger.info(f"Playwright browsers not found ({str(e)}), attempting to install...")
+            try:
+                # Install chromium browser with system dependencies
+                # Use --with-deps to ensure all system libraries are installed
+                install_cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
+                logger.info(f"Running: {' '.join(install_cmd)}")
+                
+                result = subprocess.run(
+                    install_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=600  # Increased timeout for cloud environments
+                )
+                
+                if result.returncode == 0:
+                    logger.info("Successfully installed Playwright browsers")
+                    logger.debug(f"Install output: {result.stdout}")
+                else:
+                    error_msg = result.stderr or result.stdout
+                    logger.error(f"Failed to install browsers. Return code: {result.returncode}")
+                    logger.error(f"Error output: {error_msg}")
+                    # Don't raise immediately, try to continue - browser might be installed elsewhere
+                    logger.warning("Browser installation had errors, but continuing...")
+            except subprocess.TimeoutExpired:
+                logger.error("Timeout installing Playwright browsers")
+                raise ScrapingError("Timeout installing Playwright browsers (exceeded 10 minutes)")
+            except Exception as e:
+                logger.error(f"Error installing Playwright browsers: {str(e)}")
+                # Don't raise - might be a path issue, not installation issue
+                logger.warning("Continuing despite installation error...")
+    
     def get_page_html_with_playwright(self) -> str:
         """Get page HTML using Playwright (for JavaScript rendering)"""
         if not PLAYWRIGHT_AVAILABLE:
             raise ScrapingError("Playwright is not installed. Please install it with: pip install playwright && playwright install chromium")
         
+        # Ensure browsers are installed before attempting to use them
+        self._ensure_playwright_browsers()
+        
         try:
             logger.info("Using Playwright to render JavaScript...")
+            
+            # Set environment variable for browser path if needed (for cloud environments)
+            # This helps Playwright find browsers in non-standard locations
+            if 'PLAYWRIGHT_BROWSERS_PATH' not in os.environ:
+                # Try common locations where browsers might be installed
+                possible_paths = [
+                    os.path.expanduser('~/.cache/ms-playwright'),
+                    '/workspace/.cache/ms-playwright',
+                    os.path.join(os.getcwd(), '.playwright'),
+                    '/root/.cache/ms-playwright',  # Common in Docker/cloud environments
+                    '/home/app/.cache/ms-playwright',  # Common in app deployments
+                ]
+                
+                # Also check if any of these paths contain chromium
+                for path in possible_paths:
+                    if os.path.exists(path):
+                        # Check if chromium is actually there
+                        chromium_matches = glob.glob(os.path.join(path, 'chromium-*', 'chrome-linux', 'chrome'))
+                        if chromium_matches or os.path.exists(path):
+                            os.environ['PLAYWRIGHT_BROWSERS_PATH'] = path
+                            logger.info(f"Set PLAYWRIGHT_BROWSERS_PATH to: {path}")
+                            if chromium_matches:
+                                logger.info(f"Found chromium at: {chromium_matches[0]}")
+                            break
+            
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                # Try to launch with explicit path handling
+                try:
+                    browser = p.chromium.launch(headless=True)
+                except Exception as launch_error:
+                    # If launch fails, try to install browsers again
+                    logger.warning(f"Browser launch failed: {launch_error}, attempting to reinstall...")
+                    self._ensure_playwright_browsers()
+                    browser = p.chromium.launch(headless=True)
+                
                 page = browser.new_page()
                 
                 # Navigate to page and wait for network to be idle
@@ -156,7 +244,18 @@ class ALPPriceScraper:
                 logger.info("Successfully rendered page with Playwright")
                 return html
         except Exception as e:
-            raise ScrapingError(f"Playwright error: {str(e)}")
+            error_msg = str(e)
+            if "Executable doesn't exist" in error_msg or "browser" in error_msg.lower():
+                logger.error(f"Playwright browser error: {error_msg}")
+                logger.info("Attempting to install browsers...")
+                try:
+                    self._ensure_playwright_browsers()
+                    # Retry once after installation
+                    logger.info("Retrying after browser installation...")
+                    return self.get_page_html_with_playwright()
+                except Exception as retry_error:
+                    raise ScrapingError(f"Playwright error after retry: {str(retry_error)}")
+            raise ScrapingError(f"Playwright error: {error_msg}")
     
     def scrape_alp_data(self, html_content: str = None) -> Dict[str, Any]:
         """Scrape ALP price, TVL, and APY from AsterDex website"""
