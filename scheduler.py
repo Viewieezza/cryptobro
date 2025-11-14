@@ -165,6 +165,7 @@ def main():
     # Run immediately on startup
     logging.info("Running initial execution...")
     run_worker_server()
+    run_alp_price_scraper()
     
     # Keep the scheduler running
     while True:
