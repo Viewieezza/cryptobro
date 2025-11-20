@@ -4,23 +4,11 @@ import logging
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import requests
-from bs4 import BeautifulSoup
 import time
 import base64
 import json
 from typing import Optional, Dict, Any
 from datetime import datetime
-import re
-import subprocess
-import sys
-import glob
-
-# Try to import playwright (for JavaScript rendering)
-try:
-    from playwright.sync_api import sync_playwright
-    PLAYWRIGHT_AVAILABLE = True
-except ImportError:
-    PLAYWRIGHT_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(
@@ -49,7 +37,7 @@ class ALPPriceScraper:
     def __init__(self):
         self.sheet = None
         self.client = None
-        self.url = 'https://www.asterdex.com/en/earn/alp'
+        self.api_endpoint = 'https://www.asterdex.com/bapi/futures/v1/public/future/symbol/history-price'
         self.worksheet_title = 'ALP Price'
         self.alp_contract_address = None
         self.wallet_address = None
@@ -129,380 +117,185 @@ class ALPPriceScraper:
         except Exception as e:
             raise GoogleSheetsError(f"Failed to setup Google Sheets: {str(e)}")
     
-    def _ensure_playwright_browsers(self) -> None:
-        """Ensure Playwright browsers are installed"""
+    def get_alp_price_from_api(self) -> Dict[str, Any]:
+        """Get ALP price from API directly"""
         try:
-            logger.info("Checking if Playwright browsers are installed...")
-            with sync_playwright() as p:
-                # Try to get browser path - this will fail if browsers aren't installed
-                try:
-                    browser_path = p.chromium.executable_path
-                    if os.path.exists(browser_path):
-                        logger.info(f"Playwright browser found at: {browser_path}")
-                        return
-                    else:
-                        logger.warning(f"Browser path exists but file not found: {browser_path}")
-                        raise FileNotFoundError(f"Browser executable not found at {browser_path}")
-                except Exception as e:
-                    logger.warning(f"Browser not found: {e}")
-                    raise
-        except Exception as e:
-            logger.info(f"Playwright browsers not found ({str(e)}), attempting to install...")
-            try:
-                # Install chromium browser with system dependencies
-                # Use --with-deps to ensure all system libraries are installed
-                install_cmd = [sys.executable, "-m", "playwright", "install", "chromium"]
-                logger.info(f"Running: {' '.join(install_cmd)}")
-                
-                result = subprocess.run(
-                    install_cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=600  # Increased timeout for cloud environments
-                )
-                
-                if result.returncode == 0:
-                    logger.info("Successfully installed Playwright browsers")
-                    logger.debug(f"Install output: {result.stdout}")
-                else:
-                    error_msg = result.stderr or result.stdout
-                    logger.error(f"Failed to install browsers. Return code: {result.returncode}")
-                    logger.error(f"Error output: {error_msg}")
-                    # Don't raise immediately, try to continue - browser might be installed elsewhere
-                    logger.warning("Browser installation had errors, but continuing...")
-            except subprocess.TimeoutExpired:
-                logger.error("Timeout installing Playwright browsers")
-                raise ScrapingError("Timeout installing Playwright browsers (exceeded 10 minutes)")
-            except Exception as e:
-                logger.error(f"Error installing Playwright browsers: {str(e)}")
-                # Don't raise - might be a path issue, not installation issue
-                logger.warning("Continuing despite installation error...")
-    
-    def get_page_html_with_playwright(self) -> str:
-        """Get page HTML using Playwright (for JavaScript rendering)"""
-        if not PLAYWRIGHT_AVAILABLE:
-            raise ScrapingError("Playwright is not installed. Please install it with: pip install playwright && playwright install chromium")
-        
-        # Ensure browsers are installed before attempting to use them
-        self._ensure_playwright_browsers()
-        
-        try:
-            logger.info("Using Playwright to render JavaScript...")
-            
-            # Set environment variable for browser path if needed (for cloud environments)
-            # This helps Playwright find browsers in non-standard locations
-            if 'PLAYWRIGHT_BROWSERS_PATH' not in os.environ:
-                # Try common locations where browsers might be installed
-                possible_paths = [
-                    os.path.expanduser('~/.cache/ms-playwright'),
-                    '/workspace/.cache/ms-playwright',
-                    os.path.join(os.getcwd(), '.playwright'),
-                    '/root/.cache/ms-playwright',  # Common in Docker/cloud environments
-                    '/home/app/.cache/ms-playwright',  # Common in app deployments
-                ]
-                
-                # Also check if any of these paths contain chromium
-                for path in possible_paths:
-                    if os.path.exists(path):
-                        # Check if chromium is actually there
-                        chromium_matches = glob.glob(os.path.join(path, 'chromium-*', 'chrome-linux', 'chrome'))
-                        if chromium_matches or os.path.exists(path):
-                            os.environ['PLAYWRIGHT_BROWSERS_PATH'] = path
-                            logger.info(f"Set PLAYWRIGHT_BROWSERS_PATH to: {path}")
-                            if chromium_matches:
-                                logger.info(f"Found chromium at: {chromium_matches[0]}")
-                            break
-            
-            with sync_playwright() as p:
-                # Try to launch with explicit path handling
-                try:
-                    browser = p.chromium.launch(headless=True)
-                except Exception as launch_error:
-                    # If launch fails, try to install browsers again
-                    logger.warning(f"Browser launch failed: {launch_error}, attempting to reinstall...")
-                    self._ensure_playwright_browsers()
-                    browser = p.chromium.launch(headless=True)
-                
-                page = browser.new_page()
-                
-                # Navigate to page and wait for network to be idle
-                page.goto(self.url, wait_until='networkidle', timeout=60000)
-                
-                # Wait for content to load (look for ALP or price-related elements)
-                try:
-                    # Wait for either price element or stats element to appear
-                    page.wait_for_selector('text=/ALP|TVL|APY/i', timeout=15000)
-                except:
-                    logger.warning("Timeout waiting for ALP content, waiting additional time...")
-                
-                # Additional wait for dynamic content and API calls
-                page.wait_for_timeout(3000)
-                
-                html = page.content()
-                browser.close()
-                
-                logger.info("Successfully rendered page with Playwright")
-                return html
-        except Exception as e:
-            error_msg = str(e)
-            if "Executable doesn't exist" in error_msg or "browser" in error_msg.lower():
-                logger.error(f"Playwright browser error: {error_msg}")
-                logger.info("Attempting to install browsers...")
-                try:
-                    self._ensure_playwright_browsers()
-                    # Retry once after installation
-                    logger.info("Retrying after browser installation...")
-                    return self.get_page_html_with_playwright()
-                except Exception as retry_error:
-                    raise ScrapingError(f"Playwright error after retry: {str(retry_error)}")
-            raise ScrapingError(f"Playwright error: {error_msg}")
-    
-    def scrape_alp_data(self, html_content: str = None) -> Dict[str, Any]:
-        """Scrape ALP price, TVL, and APY from AsterDex website"""
-        try:
-            # Use Playwright to render JavaScript if HTML not provided
-            if not html_content:
-                if not PLAYWRIGHT_AVAILABLE:
-                    raise ScrapingError(
-                        "Playwright is not installed. Please install it with:\n"
-                        "  pip install playwright\n"
-                        "  playwright install chromium"
-                    )
-                
-                html_content = self.get_page_html_with_playwright()
-                logger.info("Successfully fetched page using Playwright")
-            
-            soup = BeautifulSoup(html_content, 'html.parser')
-            
-            # Initialize result
-            result = {
-                'price': None,
-                'tvl': None,
-                'apy': None
+            headers = {
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Referer": "https://www.asterdex.com/",
+                "Origin": "https://www.asterdex.com"
             }
             
-            # Debug: Save HTML for inspection if needed
-            page_text = soup.get_text()
-            logger.info(f"Page text length: {len(page_text)}")
-            logger.info(f"Page text preview (first 3000 chars): {page_text[:3000]}")
+            # Parameters for ALP price history
+            params = {
+                "dataSize": 4320,
+                "channel": "BSC",
+                "currency": "alb"  # ALP token
+            }
             
-            # Also check raw HTML for debugging
-            if 'ALP' in html_content or 'TVL' in html_content or 'APY' in html_content:
-                logger.info("Found ALP/TVL/APY keywords in HTML content")
-            else:
-                logger.warning("ALP/TVL/APY keywords not found in HTML content")
+            logger.info(f"Calling API: {self.api_endpoint}")
+            logger.info(f"Parameters: {params}")
             
-            # Method 1: Search for price pattern in entire page text first (most flexible)
-            # Look for "1 ALP = X.XXXX USD" or "ALP = X.XXXX USD" patterns
-            price_patterns = [
-                r'1\s+ALP\s*=\s*([\d.]+)\s*USD',
-                r'ALP\s*=\s*([\d.]+)\s*USD',
-                r'1\s*ALP\s*=\s*\$?([\d.]+)',
-            ]
+            response = requests.post(self.api_endpoint, headers=headers, json=params, timeout=10)
             
-            for pattern in price_patterns:
-                price_match = re.search(pattern, page_text, re.IGNORECASE)
-                if price_match:
-                    try:
-                        price_value = float(price_match.group(1))
-                        if 0.01 < price_value < 1000000:  # Reasonable price range
-                            result['price'] = price_value
-                            logger.info(f"Found ALP price using pattern '{pattern}': {result['price']}")
-                            break
-                    except ValueError:
-                        continue
+            if response.status_code != 200:
+                error_msg = f"API returned status {response.status_code}: {response.text[:500]}"
+                logger.error(error_msg)
+                raise ScrapingError(error_msg)
             
-            # Method 2: Find price from specific div with class containing keywords
-            if not result['price']:
-                def has_price_classes(class_attr):
-                    if not class_attr:
-                        return False
-                    class_str = ' '.join(class_attr) if isinstance(class_attr, list) else str(class_attr)
-                    # More flexible: check if it has any of the key classes
-                    return ('text-interactive-primary' in class_str or 'text-t-link' in class_str) and 'text-body1' in class_str
-                
-                price_divs = soup.find_all('div', class_=has_price_classes)
-                for price_div in price_divs:
-                    price_text = price_div.get_text(strip=True)
-                    price_match = re.search(r'1\s+ALP\s*=\s*([\d.]+)\s*USD', price_text, re.IGNORECASE)
-                    if price_match:
-                        try:
-                            result['price'] = float(price_match.group(1))
-                            logger.info(f"Found ALP price from div: {result['price']}")
-                            break
-                        except ValueError:
-                            continue
+            data = response.json()
             
-            # Method 3: Find TVL and APY - search in entire page text first
-            # Look for "TVL $XX.XXM" or "TVL $XX.XXK" patterns
-            tvl_patterns = [
-                r'TVL\s*\$?([\d.]+)([MK]?)',
-                r'Total\s+Value\s+Locked[:\s]*\$?([\d.]+)([MK]?)',
-            ]
+            # Check if API call was successful
+            if not data.get("success", False) or data.get("code") != "000000":
+                error_msg = f"API error: {data.get('message', 'Unknown error')}"
+                logger.error(error_msg)
+                raise ScrapingError(error_msg)
             
-            for pattern in tvl_patterns:
-                tvl_match = re.search(pattern, page_text, re.IGNORECASE)
-                if tvl_match:
-                    try:
-                        tvl_value = float(tvl_match.group(1))
-                        multiplier = (tvl_match.group(2) if len(tvl_match.groups()) > 1 else '').upper()
-                        if multiplier == 'M':
-                            result['tvl'] = tvl_value * 1_000_000
-                        elif multiplier == 'K':
-                            result['tvl'] = tvl_value * 1_000
-                        else:
-                            result['tvl'] = tvl_value
-                        logger.info(f"Found TVL using pattern '{pattern}': ${result['tvl']:,.2f}")
-                        break
-                    except (ValueError, IndexError):
-                        continue
+            price_history = data.get("data", [])
             
-            # Look for APY pattern
-            apy_patterns = [
-                r'APY\s*([\d.]+)%',
-                r'Annual\s+Percentage\s+Yield[:\s]*([\d.]+)%',
-            ]
+            if not price_history:
+                raise ScrapingError("No price history data returned from API")
             
-            for pattern in apy_patterns:
-                apy_match = re.search(pattern, page_text, re.IGNORECASE)
-                if apy_match:
-                    try:
-                        result['apy'] = float(apy_match.group(1))
-                        logger.info(f"Found APY using pattern '{pattern}': {result['apy']}%")
-                        break
-                    except (ValueError, IndexError):
-                        continue
+            # Find the latest price (entry with maximum time)
+            latest_entry = max(price_history, key=lambda x: x.get("time", 0))
+            latest_price = latest_entry.get("price")
+            latest_time = latest_entry.get("time")
             
-            # Method 4: Try to find from specific div structure (if page is rendered)
-            if not result['tvl'] or not result['apy']:
-                def has_stats_classes(class_attr):
-                    if not class_attr:
-                        return False
-                    class_str = ' '.join(class_attr) if isinstance(class_attr, list) else str(class_attr)
-                    # More flexible: check for key classes
-                    return 'flex' in class_str and 'text-t-primary' in class_str and 'text-body1' in class_str
-                
-                stats_divs = soup.find_all('div', class_=has_stats_classes)
-                for stats_div in stats_divs:
-                    stats_text = stats_div.get_text(strip=True)
-                    
-                    # Extract TVL if not found yet
-                    if not result['tvl']:
-                        tvl_match = re.search(r'TVL\s*\$?([\d.]+)([MK]?)', stats_text, re.IGNORECASE)
-                        if tvl_match:
-                            try:
-                                tvl_value = float(tvl_match.group(1))
-                                multiplier = tvl_match.group(2).upper() if len(tvl_match.groups()) > 1 else ''
-                                if multiplier == 'M':
-                                    result['tvl'] = tvl_value * 1_000_000
-                                elif multiplier == 'K':
-                                    result['tvl'] = tvl_value * 1_000
-                                else:
-                                    result['tvl'] = tvl_value
-                                logger.info(f"Found TVL from div: ${result['tvl']:,.2f}")
-                            except (ValueError, IndexError):
-                                pass
-                    
-                    # Extract APY if not found yet
-                    if not result['apy']:
-                        apy_match = re.search(r'APY\s*([\d.]+)%', stats_text, re.IGNORECASE)
-                        if apy_match:
-                            try:
-                                result['apy'] = float(apy_match.group(1))
-                                logger.info(f"Found APY from div: {result['apy']}%")
-                            except (ValueError, IndexError):
-                                pass
-                    
-                    if result['tvl'] and result['apy']:
-                        break
+            if latest_price is None:
+                raise ScrapingError("Could not extract price from API response")
             
-            # Method 5: Look in script tags for JSON data (common in React apps)
-            if not result['price'] or not result['tvl'] or not result['apy']:
-                script_tags = soup.find_all('script')
-                for script in script_tags:
-                    if script.string:
-                        script_text = script.string
-                        # Look for price in various JSON formats
-                        price_matches = re.findall(r'["\']?price["\']?\s*[:=]\s*([\d.]+)', script_text, re.IGNORECASE)
-                        if price_matches and not result['price']:
-                            try:
-                                potential_price = float(price_matches[0])
-                                if 0.01 < potential_price < 1000000:
-                                    result['price'] = potential_price
-                                    logger.info(f"Found ALP price in script: {result['price']}")
-                            except (ValueError, IndexError):
-                                pass
-                        
-                        # Look for ALP-specific patterns
-                        alp_price_match = re.search(r'ALP.*?([\d.]+).*?USD', script_text, re.IGNORECASE)
-                        if alp_price_match and not result['price']:
-                            try:
-                                potential_price = float(re.search(r'[\d.]+', alp_price_match.group(0)).group(0))
-                                if 0.01 < potential_price < 1000000:
-                                    result['price'] = potential_price
-                                    logger.info(f"Found ALP price in script (pattern): {result['price']}")
-                            except (ValueError, AttributeError):
-                                pass
+            logger.info(f"Latest ALP price: {latest_price} (time: {latest_time})")
             
-            # Validate that we found at least the price
-            if not result['price']:
-                # Log more debug info
-                logger.warning("Could not find ALP price. Attempting to find any price-related text...")
-                # Look for any text containing numbers that might be prices
-                potential_prices = re.findall(r'[\d]+\.[\d]{2,4}', page_text)
-                if potential_prices:
-                    logger.warning(f"Found potential price-like numbers: {potential_prices[:10]}")
-                logger.warning(f"Page title: {soup.title.string if soup.title else 'No title'}")
-                raise ScrapingError("Could not extract ALP price from the webpage. The page may require JavaScript rendering.")
-            
-            logger.info(f"Successfully scraped ALP data: Price={result['price']}, TVL={result['tvl']}, APY={result['apy']}")
-            return result
+            return {
+                'price': latest_price,
+                'time': latest_time,
+                'price_history': price_history
+            }
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
-            raise ScrapingError(f"Failed to fetch webpage: {str(e)}")
+            raise ScrapingError(f"Failed to fetch price from API: {str(e)}")
         except Exception as e:
-            logger.error(f"Error scraping ALP data: {e}")
-            raise ScrapingError(f"Scraping error: {str(e)}")
+            logger.error(f"Error getting ALP price: {e}")
+            raise ScrapingError(f"Error getting ALP price: {str(e)}")
     
-    def find_alp_contract_address(self, html_content: str) -> Optional[str]:
-        """Find ALP contract address from HTML content"""
-        try:
-            soup = BeautifulSoup(html_content, 'html.parser')
-            page_text = soup.get_text()
-            
-            # Look for Ethereum address pattern (0x followed by 40 hex characters)
-            eth_address_pattern = r'0x[a-fA-F0-9]{40}'
-            addresses = re.findall(eth_address_pattern, page_text)
-            
-            # Also check in script tags and data attributes
-            script_tags = soup.find_all('script')
-            for script in script_tags:
-                if script.string:
-                    addresses.extend(re.findall(eth_address_pattern, script.string))
-            
-            # Filter addresses that might be ALP contract
-            # Look for common contract-related keywords near the address
-            for addr in addresses:
-                # Check if address appears near ALP-related text
-                addr_index = page_text.find(addr)
-                if addr_index != -1:
-                    context = page_text[max(0, addr_index-50):addr_index+90].lower()
-                    if any(keyword in context for keyword in ['alp', 'contract', 'token', 'address']):
-                        logger.info(f"Found potential ALP contract address: {addr}")
-                        return addr
-            
-            if addresses:
-                logger.info(f"Found Ethereum address (using first one): {addresses[0]}")
-                return addresses[0]
-            
+    def calculate_apy_from_history(self, price_history: list, period_days: int = 60) -> Optional[float]:
+        """Calculate APY from price history using simple return annualized
+        
+        Based on testing, the website shows APY around 14.26% which is closest
+        to a 60-day simple return calculation (gives ~14.44%).
+        
+        Args:
+            price_history: List of price entries with 'price' and 'time' keys
+            period_days: Number of days to look back (default 60 days based on website calculation)
+        
+        Returns:
+            APY as percentage (e.g., 14.44 for 14.44%)
+        """
+        if not price_history or len(price_history) < 2:
+            logger.warning("Not enough price history to calculate APY")
             return None
+        
+        try:
+            # Sort by time (oldest to newest)
+            sorted_history = sorted(price_history, key=lambda x: x.get("time", 0))
+            
+            newest = sorted_history[-1]
+            newest_price = newest.get("price")
+            newest_time = newest.get("time")
+            
+            if not newest_price or not newest_time:
+                return None
+            
+            # Find price from period_days ago
+            target_time = newest_time - (period_days * 24 * 60 * 60 * 1000)
+            
+            # Find closest entry to target time
+            closest_entry = min(
+                sorted_history,
+                key=lambda x: abs(x.get("time", 0) - target_time)
+            )
+            
+            closest_price = closest_entry.get("price")
+            closest_time = closest_entry.get("time")
+            
+            if not closest_price or not closest_time:
+                return None
+            
+            # Calculate time difference in days
+            time_diff_ms = newest_time - closest_time
+            time_diff_days = time_diff_ms / (1000 * 60 * 60 * 24)
+            
+            if time_diff_days <= 0:
+                logger.warning(f"Invalid time difference: {time_diff_days} days")
+                return None
+            
+            # Calculate APY using simple return annualized:
+            # APY = ((new_price - old_price) / old_price) * (365 / days) * 100
+            # This matches the website's calculation method (approximately 60 days)
+            price_return = (newest_price - closest_price) / closest_price
+            days_in_year = 365.0
+            apy = price_return * (days_in_year / time_diff_days) * 100
+            
+            logger.info(f"Calculated APY: {apy:.2f}% (from {time_diff_days:.1f} days, "
+                       f"price: ${closest_price:.8f} -> ${newest_price:.8f})")
+            
+            return apy
+            
         except Exception as e:
-            logger.warning(f"Error finding ALP contract address: {e}")
+            logger.error(f"Error calculating APY: {e}")
+            return None
+    
+    def get_total_supply(self, contract_address: str) -> Optional[float]:
+        """Get ALP token total supply using web3"""
+        if not contract_address:
+            logger.warning("ALP contract address not provided, skipping total supply")
+            return None
+        
+        try:
+            # Try web3 (if available)
+            try:
+                from web3 import Web3
+                rpc_url = os.getenv("BSC_RPC_URL", "https://binance.llamarpc.com")
+                return self._get_total_supply_web3(contract_address, rpc_url)
+            except ImportError:
+                logger.warning("web3 not installed, cannot get total supply")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Error getting total supply: {e}")
+            return None
+    
+    def _get_total_supply_web3(self, contract_address: str, rpc_url: str) -> Optional[float]:
+        """Get token total supply using web3"""
+        try:
+            from web3 import Web3
+            
+            w3 = Web3(Web3.HTTPProvider(rpc_url))
+            
+            # ERC20 totalSupply ABI
+            abi = [{
+                "constant": True,
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "type": "function"
+            }]
+            
+            contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=abi)
+            total_supply_wei = contract.functions.totalSupply().call()
+            total_supply = total_supply_wei / 10**18
+            
+            logger.info(f"Got total supply from web3: {total_supply}")
+            return total_supply
+        except Exception as e:
+            logger.error(f"web3 error getting total supply: {e}")
             return None
     
     def get_token_balance(self, contract_address: str, wallet_address: str) -> Optional[float]:
-        """Get ALP token balance using Etherscan API or web3"""
+        """Get ALP token balance using web3"""
         if not wallet_address:
             logger.warning("Wallet address not provided, skipping token balance")
             return None
@@ -512,48 +305,17 @@ class ALPPriceScraper:
             return None
         
         try:
-            # Method 2: Try web3 (if available)
+            # Try web3 (if available)
             try:
                 from web3 import Web3
                 rpc_url = os.getenv("BSC_RPC_URL", "https://binance.llamarpc.com")
                 return self._get_token_balance_web3(contract_address, wallet_address, rpc_url)
             except ImportError:
                 logger.warning("web3 not installed, cannot use web3 method")
-            
-            # Method 3: Try public API (no API key required)
-            return self._get_token_balance_public_api(contract_address, wallet_address)
+                return None
             
         except Exception as e:
             logger.error(f"Error getting token balance: {e}")
-            return None
-    
-    def _get_token_balance_etherscan(self, contract_address: str, wallet_address: str, api_key: str) -> Optional[float]:
-        """Get token balance using Etherscan API"""
-        try:
-            url = "https://api.etherscan.io/api"
-            params = {
-                'module': 'account',
-                'action': 'tokenbalance',
-                'contractaddress': contract_address,
-                'address': wallet_address,
-                'tag': 'latest',
-                'apikey': api_key
-            }
-            
-            response = requests.get(url, params=params, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('status') == '1' and data.get('message') == 'OK':
-                    # Token balance is returned in smallest unit (wei), need to divide by 10^18
-                    balance_wei = int(data.get('result', '0'))
-                    balance = balance_wei / 10**18
-                    logger.info(f"Got token balance from Etherscan: {balance}")
-                    return balance
-            
-            logger.warning(f"Etherscan API error: {data.get('message', 'Unknown error')}")
-            return None
-        except Exception as e:
-            logger.error(f"Etherscan API error: {e}")
             return None
     
     def _get_token_balance_web3(self, contract_address: str, wallet_address: str, rpc_url: str) -> Optional[float]:
@@ -582,30 +344,8 @@ class ALPPriceScraper:
             logger.error(f"web3 error: {e}")
             return None
     
-    def _get_token_balance_public_api(self, contract_address: str, wallet_address: str) -> Optional[float]:
-        """Get token balance using public API (no API key required)"""
-        try:
-            # Try ethplorer.io (free tier)
-            url = f"https://api.ethplorer.io/getAddressInfo/{wallet_address}"
-            params = {'apiKey': 'freekey'}
-            
-            response = requests.get(url, params=params, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                tokens = data.get('tokens', [])
-                for token in tokens:
-                    if token.get('tokenInfo', {}).get('address', '').lower() == contract_address.lower():
-                        balance = float(token.get('balance', 0)) / 10**int(token.get('tokenInfo', {}).get('decimals', 18))
-                        logger.info(f"Got token balance from ethplorer: {balance}")
-                        return balance
-            
-            return None
-        except Exception as e:
-            logger.error(f"Public API error: {e}")
-            return None
-    
     def update_google_sheet(self, data: Dict[str, Any]) -> bool:
-        """Update Google Sheet with ALP price, TVL, APY, and ALP Amount"""
+        """Update Google Sheet with ALP price and ALP Amount"""
         try:
             now = datetime.now()
             timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -614,8 +354,8 @@ class ALPPriceScraper:
             
             # Format values for display
             price = data.get('price', '')
-            tvl = data.get('tvl', '')
-            apy = data.get('apy', '')
+            tvl = data.get('tvl', '')  # Not available from API, keep for compatibility
+            apy = data.get('apy', '')  # Not available from API, keep for compatibility
             alp_amount = data.get('alp_amount', '')
             
             # Format TVL if it exists
@@ -635,7 +375,7 @@ class ALPPriceScraper:
             # Format ALP amount if it exists
             alp_amount_display = f"{alp_amount:.6f}" if alp_amount else ''
             
-            # Append new row (Column G is index 6)
+            # Append new row
             row_data = [timestamp, price, tvl_display, apy_display, date, time_str, alp_amount_display]
             self.sheet.append_row(row_data)
             
@@ -659,32 +399,49 @@ class ALPPriceScraper:
             self.setup_google_sheets()
             logger.info("Google Sheets setup completed")
             
-            # Get HTML content using Playwright
-            if not PLAYWRIGHT_AVAILABLE:
-                raise ScrapingError(
-                    "Playwright is not installed. Please install it with:\n"
-                    "  pip install playwright\n"
-                    "  playwright install chromium"
-                )
+            # Get ALP price from API
+            api_data = self.get_alp_price_from_api()
+            if not api_data.get('price'):
+                raise ScrapingError("Failed to get ALP price from API")
             
-            html_content = self.get_page_html_with_playwright()
-            logger.info("Successfully fetched page using Playwright")
+            # Calculate APY from price history
+            # Based on testing, website uses ~60 days for APY calculation (gives ~14.26%)
+            price_history = api_data.get('price_history', [])
+            apy = None
+            if price_history:
+                # Use 60 days period (matches website's calculation method)
+                apy = self.calculate_apy_from_history(price_history, period_days=60)
+                if apy is None:
+                    # Fallback: try with available data if 60 days not available
+                    sorted_history = sorted(price_history, key=lambda x: x.get("time", 0))
+                    if len(sorted_history) >= 2:
+                        oldest_time = sorted_history[0].get("time", 0)
+                        newest_time = sorted_history[-1].get("time", 0)
+                        available_days = (newest_time - oldest_time) / (1000 * 60 * 60 * 24)
+                        if available_days > 0:
+                            # Use minimum of 60 days or available days
+                            period = min(60, int(available_days))
+                            apy = self.calculate_apy_from_history(price_history, period_days=period)
             
-            # Scrape ALP data (price, TVL, APY) from HTML
-            data = self.scrape_alp_data(html_content=html_content)
-            if not data.get('price'):
-                raise ScrapingError("Failed to scrape ALP price")
-            
-            # Get ALP contract address
-            if not self.alp_contract_address:
-                logger.info("ALP contract address not set, trying to find from page...")
-                self.alp_contract_address = self.find_alp_contract_address(html_content)
-                if self.alp_contract_address:
-                    logger.info(f"Found ALP contract address: {self.alp_contract_address}")
+            # Calculate TVL = total_supply × price
+            tvl = None
+            if self.alp_contract_address:
+                logger.info(f"Getting ALP total supply for TVL calculation...")
+                total_supply = self.get_total_supply(self.alp_contract_address)
+                if total_supply is not None and api_data.get('price'):
+                    tvl = total_supply * api_data['price']
+                    logger.info(f"Calculated TVL: ${tvl:,.2f} (Total Supply: {total_supply:,.2f} × Price: ${api_data['price']:.8f})")
                 else:
-                    logger.warning("Could not find ALP contract address from page")
+                    logger.warning("Could not calculate TVL (missing total supply or price)")
             
-            # Get ALP token balance
+            # Prepare data for sheet update
+            data = {
+                'price': api_data['price'],
+                'tvl': tvl,  # Calculated from total supply × price
+                'apy': apy,  # Calculated from price history
+            }
+            
+            # Get ALP token balance if contract and wallet addresses are provided
             if self.alp_contract_address and self.wallet_address:
                 logger.info(f"Getting ALP token balance for wallet: {self.wallet_address}")
                 alp_balance = self.get_token_balance(self.alp_contract_address, self.wallet_address)
@@ -727,4 +484,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

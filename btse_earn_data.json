@@ -1,0 +1,1063 @@
+{
+  "products": [
+    {
+      "id": "FIXEDUSDT00001",
+      "name": "USDT Fixed Deposit",
+      "currency": "USDT",
+      "type": "Fixed",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 7,
+          "rate": 6.15
+        },
+        {
+          "days": 14,
+          "rate": 6.5
+        },
+        {
+          "days": 30,
+          "rate": 7
+        },
+        {
+          "days": 60,
+          "rate": 7.5
+        },
+        {
+          "days": 90,
+          "rate": 8
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENUSDT00001",
+      "name": "USDT Flex Savings",
+      "currency": "USDT",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 6
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "FIXEDUSDC00001",
+      "name": "USDC Fixed Deposit",
+      "currency": "USDC",
+      "type": "Fixed",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 7,
+          "rate": 6.15
+        },
+        {
+          "days": 14,
+          "rate": 6.5
+        },
+        {
+          "days": 30,
+          "rate": 7
+        },
+        {
+          "days": 60,
+          "rate": 7.5
+        },
+        {
+          "days": 90,
+          "rate": 8
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENUSDC00001",
+      "name": "USDC Flex Savings",
+      "currency": "USDC",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 6
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "FIXEDTBTC00001",
+      "name": "BTC Fixed Deposit",
+      "currency": "BTC",
+      "type": "Fixed",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 3.15
+        },
+        {
+          "days": 60,
+          "rate": 3.25
+        },
+        {
+          "days": 90,
+          "rate": 3.5
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENBTC00001",
+      "name": "BTC Flex Savings",
+      "currency": "BTC",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 3
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "FIXEDTETH00001",
+      "name": "ETH Fixed Deposit",
+      "currency": "ETH",
+      "type": "Fixed",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 3.15
+        },
+        {
+          "days": 60,
+          "rate": 3.25
+        },
+        {
+          "days": 90,
+          "rate": 3.5
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENETH00001",
+      "name": "ETH Flex Savings",
+      "currency": "ETH",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 3
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEAXS00001",
+      "name": "AXS Staking",
+      "currency": "AXS",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.1,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 10.22
+        },
+        {
+          "days": 60,
+          "rate": 10.5
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKELPT00001",
+      "name": "LPT Staking",
+      "currency": "LPT",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 8.46
+        },
+        {
+          "days": 60,
+          "rate": 8.69
+        },
+        {
+          "days": 90,
+          "rate": 9.27
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEDOT00001",
+      "name": "DOT Staking",
+      "currency": "DOT",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 8.4
+        },
+        {
+          "days": 60,
+          "rate": 8.63
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "FIXEDFDUSD00001",
+      "name": "FDUSD Fixed Deposit",
+      "currency": "FDUSD",
+      "type": "Fixed",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 7,
+          "rate": 5.75
+        },
+        {
+          "days": 14,
+          "rate": 6
+        },
+        {
+          "days": 30,
+          "rate": 6.25
+        },
+        {
+          "days": 60,
+          "rate": 6.5
+        },
+        {
+          "days": 90,
+          "rate": 7
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDWUSD000001",
+      "name": "Wrapped USD Lending",
+      "currency": "WUSD",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 6
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENFDUSD00001",
+      "name": "FDUSD Flex Savings",
+      "currency": "FDUSD",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 6
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKECTSI00001",
+      "name": "CTSI Staking",
+      "currency": "CTSI",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 5.04
+        },
+        {
+          "days": 60,
+          "rate": 5.18
+        },
+        {
+          "days": 90,
+          "rate": 5.52
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENUSDP00001",
+      "name": "USDP Flex Savings",
+      "currency": "USDP",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 5.5
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDWHKD000001",
+      "name": "Wrapped HKD Lending",
+      "currency": "WHKD",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 5.5
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDWSGD000001",
+      "name": "Wrapped SGD Lending",
+      "currency": "WSGD",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 5.5
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEATOM00001",
+      "name": "ATOM Staking",
+      "currency": "ATOM",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 4.38
+        },
+        {
+          "days": 60,
+          "rate": 4.5
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKECELR00001",
+      "name": "CELR Staking",
+      "currency": "CELR",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 4.29
+        },
+        {
+          "days": 60,
+          "rate": 4.41
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "OPENDAI00001",
+      "name": "DAI Flex Savings",
+      "currency": "DAI",
+      "type": "Flexible",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": true,
+      "autoRenewSupported": false,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 4.35
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDBTSE000001",
+      "name": "BTSE Token Lending",
+      "currency": "BTSE",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 3.75
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEPOL00001",
+      "name": "POL Staking",
+      "currency": "POL",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 3.65
+        },
+        {
+          "days": 60,
+          "rate": 3.75
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDWEUR000001",
+      "name": "Wrapped EUR Lending",
+      "currency": "WEUR",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 3.65
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "LENDWGBP000001",
+      "name": "Wrapped GBP Lending",
+      "currency": "WGBP",
+      "type": "Lending",
+      "startDate": 0,
+      "interestStartDate": 0,
+      "dailyLimit": 0,
+      "minSize": 0.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 1,
+          "rate": 3.65
+        }
+      ],
+      "interestPayoutFrequency": 0,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEBAND00001",
+      "name": "BAND Staking",
+      "currency": "BAND",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 20.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 3.29
+        },
+        {
+          "days": 60,
+          "rate": 3.38
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEAAVE00001",
+      "name": "AAVE Staking",
+      "currency": "AAVE",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 2.56
+        },
+        {
+          "days": 60,
+          "rate": 2.63
+        },
+        {
+          "days": 90,
+          "rate": 2.81
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKESOL00001",
+      "name": "SOL Staking",
+      "currency": "SOL",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.1,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 2.39
+        },
+        {
+          "days": 60,
+          "rate": 2.46
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEGLMR00001",
+      "name": "GLMR Staking",
+      "currency": "GLMR",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 2.19
+        },
+        {
+          "days": 60,
+          "rate": 2.25
+        },
+        {
+          "days": 90,
+          "rate": 2.4
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKENEAR00001",
+      "name": "NEAR Staking",
+      "currency": "NEAR",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 307120,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 2.08
+        },
+        {
+          "days": 60,
+          "rate": 2.14
+        },
+        {
+          "days": 90,
+          "rate": 2.28
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEAVAX00001",
+      "name": "AVAX Staking",
+      "currency": "AVAX",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.1,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.68
+        },
+        {
+          "days": 60,
+          "rate": 1.73
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEGRT00001",
+      "name": "GRT Staking",
+      "currency": "GRT",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.46
+        },
+        {
+          "days": 60,
+          "rate": 1.5
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKETRX00001",
+      "name": "TRX Staking",
+      "currency": "TRX",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 100.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.38
+        },
+        {
+          "days": 60,
+          "rate": 1.42
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEXTZ00001",
+      "name": "XTZ Staking",
+      "currency": "XTZ",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.31
+        },
+        {
+          "days": 60,
+          "rate": 1.35
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEWOO00001",
+      "name": "WOO Staking",
+      "currency": "WOO",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.1
+        },
+        {
+          "days": 60,
+          "rate": 1.13
+        },
+        {
+          "days": 90,
+          "rate": 1.2
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEADA00001",
+      "name": "ADA Staking",
+      "currency": "ADA",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 1.13
+        },
+        {
+          "days": 60,
+          "rate": 1.17
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEYFI00001",
+      "name": "YFI Staking",
+      "currency": "YFI",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.01,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 0.92
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKEBNB00001",
+      "name": "BNB Staking",
+      "currency": "BNB",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 0.1,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 0.15
+        },
+        {
+          "days": 60,
+          "rate": 0.16
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    },
+    {
+      "id": "STAKESAND00001",
+      "name": "SAND Staking",
+      "currency": "SAND",
+      "type": "Staking",
+      "startDate": 1763381482000,
+      "interestStartDate": 1763388000000,
+      "dailyLimit": 0,
+      "minSize": 1.0,
+      "incrementalSize": 1.0,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "rates": [
+        {
+          "days": 30,
+          "rate": 0.01
+        }
+      ],
+      "interestPayoutFrequency": 86400000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null
+    }
+  ],
+  "timestamp": 1763295081.7266922,
+  "positions": [
+    {
+      "id": 1155447,
+      "name": "USDT VIP Fixed Deposit",
+      "currency": "USDT",
+      "type": "Fixed",
+      "rate": 12.0,
+      "investAmt": 999998.0,
+      "interestEarned": 0.0,
+      "nextInterestPayoutTime": 1769006807000,
+      "startTime": 1761230807000,
+      "endTime": 1769006807000,
+      "duration": 0,
+      "redemptionProcessing": false,
+      "payoutLockTime": 300000,
+      "minInterestPayoutTenor": 0,
+      "discountedRateForEarlyRedemption": null,
+      "compounding": false,
+      "autoRenewSupported": true,
+      "autoRenew": false
+    }
+  ],
+  "history": [
+    {
+      "txnTime": 1761230806923,
+      "name": "USDT VIP Fixed Deposit",
+      "currency": "USDT",
+      "rate": 12.0,
+      "type": "Fixed",
+      "txnType": "INVEST_SERVICE_TYPE_DEPOSIT",
+      "amount": 999998.0,
+      "totalAmount": 999998.0,
+      "duration": 90
+    }
+  ],
+  "account_balance": {}
+}
