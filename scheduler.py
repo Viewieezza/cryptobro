@@ -139,6 +139,23 @@ def run_alp_price_scraper():
     except Exception as e:
         logging.error(f"Error running alp_price_scraper.py: {e}")
 
+def run_edgex_google_sheet():
+    """Run the edgex_google_sheet.py script"""
+    try:
+        logging.info("Starting edgex_google_sheet.py execution...")
+        result = subprocess.run(["python", "edgex_google_sheet.py"], capture_output=True, text=True)
+        
+        if result.stdout:
+            logging.info(f"edgex_google_sheet.py output:\n{result.stdout}")
+        
+        if result.stderr:
+            logging.warning(f"edgex_google_sheet.py stderr:\n{result.stderr}")
+            
+        logging.info("edgex_google_sheet.py execution completed successfully")
+        
+    except Exception as e:
+        logging.error(f"Error running edgex_google_sheet.py: {e}")
+
 def main():
     # Calculate local time equivalent to 23:00 GMT+7
     local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
@@ -148,7 +165,7 @@ def main():
     
     logging.info("Starting scheduler - Worker server will run every 60 minutes")
     logging.info(f"All scripts will run daily at 23:00 GMT+7 (which is {local_time_23_00_gmt7} local time)")
-    logging.info(f"ALP price scraper will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
+    logging.info(f"ALP price scraper and EdgeX Google Sheet will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
     schedule.every(60).minutes.do(run_worker_server)
@@ -161,11 +178,15 @@ def main():
     
     # Schedule ALP price scraper to run daily at 00:00 GMT+7
     schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
+    
+    # Schedule EdgeX Google Sheet to run daily at 00:00 GMT+7
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_edgex_google_sheet)
 
     # Run immediately on startup
     logging.info("Running initial execution...")
     run_worker_server()
     run_alp_price_scraper()
+    run_edgex_google_sheet()
     
     # Keep the scheduler running
     while True:
