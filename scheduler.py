@@ -159,6 +159,9 @@ def run_edgex_google_sheet():
 def main():
     # Calculate local time equivalent to 23:00 GMT+7
     local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
+
+    # Calculate local time equivalent to 08:00 GMT+7
+    local_time_08_00_gmt7 = get_local_time_for_gmt_plus_7(8, 0)
     
     # Calculate local time equivalent to 00:00 GMT+7
     local_time_00_00_gmt7 = get_local_time_for_gmt_plus_7(0, 0)
@@ -180,7 +183,7 @@ def main():
     schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
     
     # Schedule EdgeX Google Sheet to run daily at 00:00 GMT+7
-    schedule.every().day.at(local_time_00_00_gmt7).do(run_edgex_google_sheet)
+    schedule.every().day.at(local_time_08_00_gmt7).do(run_edgex_google_sheet)
 
     # Run immediately on startup
     logging.info("Running initial execution...")
