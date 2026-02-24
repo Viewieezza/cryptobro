@@ -156,6 +156,80 @@ def run_edgex_google_sheet():
     except Exception as e:
         logging.error(f"Error running edgex_google_sheet.py: {e}")
 
+def run_update_llp_sheet():
+    """Run the update_llp_sheet.py script"""
+    try:
+        logging.info("Starting update_llp_sheet.py execution...")
+        result = subprocess.run(["python", "update_llp_sheet.py"], capture_output=True, text=True)
+
+        if result.stdout:
+            logging.info(f"update_llp_sheet.py output:\n{result.stdout}")
+
+        if result.stderr:
+            logging.warning(f"update_llp_sheet.py stderr:\n{result.stderr}")
+
+        logging.info("update_llp_sheet.py execution completed successfully")
+
+    except Exception as e:
+        logging.error(f"Error running update_llp_sheet.py: {e}")
+
+
+def run_update_worldlib_sheet():
+    """Run the update_worldlib_sheet.py script (WLFI → Google Sheet Worldlib)"""
+    try:
+        logging.info("Starting update_worldlib_sheet.py execution...")
+        result = subprocess.run(["python", "update_worldlib_sheet.py"], capture_output=True, text=True)
+        if result.stdout:
+            logging.info(f"update_worldlib_sheet.py output:\n{result.stdout}")
+        if result.stderr:
+            logging.warning(f"update_worldlib_sheet.py stderr:\n{result.stderr}")
+        logging.info("update_worldlib_sheet.py execution completed successfully")
+    except Exception as e:
+        logging.error(f"Error running update_worldlib_sheet.py: {e}")
+
+
+def run_update_sky_money_sheet():
+    """Run the update_sky_money_sheet.py script (Sky Money stUSDT → Google Sheet 'Sky Money')"""
+    try:
+        logging.info("Starting update_sky_money_sheet.py execution...")
+        result = subprocess.run(["python", "update_sky_money_sheet.py"], capture_output=True, text=True)
+        if result.stdout:
+            logging.info(f"update_sky_money_sheet.py output:\n{result.stdout}")
+        if result.stderr:
+            logging.warning(f"update_sky_money_sheet.py stderr:\n{result.stderr}")
+        logging.info("update_sky_money_sheet.py execution completed successfully")
+    except Exception as e:
+        logging.error(f"Error running update_sky_money_sheet.py: {e}")
+
+
+def run_update_morpho_sheet():
+    """Run the update_morpho_sheet.py script (Morpho → Google Sheet 'Morpho'). Writes only A–D and F; does not touch E, G–K."""
+    try:
+        logging.info("Starting update_morpho_sheet.py execution...")
+        result = subprocess.run(["python", "update_morpho_sheet.py"], capture_output=True, text=True)
+        if result.stdout:
+            logging.info(f"update_morpho_sheet.py output:\n{result.stdout}")
+        if result.stderr:
+            logging.warning(f"update_morpho_sheet.py stderr:\n{result.stderr}")
+        logging.info("update_morpho_sheet.py execution completed successfully")
+    except Exception as e:
+        logging.error(f"Error running update_morpho_sheet.py: {e}")
+
+
+def run_update_gs_sheet():
+    """Run the update_gs_sheet.py script (GS → Google Sheet worksheet 'nvodyo8iy'). เริ่มเที่ยงคืน GMT+7. Writes only A–D and F."""
+    try:
+        logging.info("Starting update_gs_sheet.py execution...")
+        result = subprocess.run(["python", "update_gs_sheet.py"], capture_output=True, text=True)
+        if result.stdout:
+            logging.info(f"update_gs_sheet.py output:\n{result.stdout}")
+        if result.stderr:
+            logging.warning(f"update_gs_sheet.py stderr:\n{result.stderr}")
+        logging.info("update_gs_sheet.py execution completed successfully")
+    except Exception as e:
+        logging.error(f"Error running update_gs_sheet.py: {e}")
+
+
 def main():
     # Calculate local time equivalent to 23:00 GMT+7
     local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
@@ -166,9 +240,19 @@ def main():
     # Calculate local time equivalent to 00:00 GMT+7
     local_time_00_00_gmt7 = get_local_time_for_gmt_plus_7(0, 0)
     
+    # Calculate local time equivalent to 05:00 GMT+7 (ตี 5)
+    local_time_05_00_gmt7 = get_local_time_for_gmt_plus_7(5, 0)
+    # 06:00 GMT+7 สำหรับ Worldlib sheet
+    local_time_06_00_gmt7 = get_local_time_for_gmt_plus_7(6, 0)
+
     logging.info("Starting scheduler - Worker server will run every 60 minutes")
     logging.info(f"All scripts will run daily at 23:00 GMT+7 (which is {local_time_23_00_gmt7} local time)")
     logging.info(f"ALP price scraper and EdgeX Google Sheet will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
+    logging.info(f"update_llp_sheet.py will run daily at 05:00 GMT+7 (which is {local_time_05_00_gmt7} local time)")
+    logging.info(f"update_worldlib_sheet.py will run daily at 08:00 GMT+7 (which is {local_time_08_00_gmt7} local time)")
+    logging.info(f"update_sky_money_sheet.py will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
+    logging.info(f"update_morpho_sheet.py will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
+    logging.info(f"update_gs_sheet.py (nvodyo8iy) will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
     schedule.every(60).minutes.do(run_worker_server)
@@ -181,9 +265,20 @@ def main():
     
     # Schedule ALP price scraper to run daily at 00:00 GMT+7
     schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
+    # Schedule Sky Money stUSDT sheet update to run daily at 00:00 GMT+7
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_update_sky_money_sheet)
+    # Schedule Morpho sheet update at 00:00 GMT+7 (only A–D and F; does not touch other columns)
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_update_morpho_sheet)
+    # Schedule GS → sheet nvodyo8iy เริ่มเที่ยงคืน GMT+7 (only A–D and F)
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_update_gs_sheet)
     
-    # Schedule EdgeX Google Sheet to run daily at 00:00 GMT+7
+    # Schedule EdgeX Google Sheet to run daily at 08:00 GMT+7
     schedule.every().day.at(local_time_08_00_gmt7).do(run_edgex_google_sheet)
+    
+    # Schedule update_llp_sheet.py to run daily at 05:00 GMT+7 (ตี 5)
+    schedule.every().day.at(local_time_05_00_gmt7).do(run_update_llp_sheet)
+    # Schedule WLFI → Worldlib sheet รายวัน 05:00 GMT+7
+    schedule.every().day.at(local_time_08_00_gmt7).do(run_update_worldlib_sheet)
 
     # Run immediately on startup
     logging.info("Running initial execution...")

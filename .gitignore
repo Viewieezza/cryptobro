@@ -408,6 +408,8 @@ $RECYCLE.BIN/
 config.json
 secrets.json
 credentials.json
+btse_earn_data.json
+wlfi_position_data.json
 
 # API keys and tokens
 *.key
@@ -431,3 +433,6 @@ docker-compose.override.yml
 # Local development
 .local/
 local/ 
+
+btse_earn_data.json
+wlfi_position_data.json
