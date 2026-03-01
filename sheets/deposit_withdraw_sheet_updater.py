@@ -1,8 +1,9 @@
-import os
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from dotenv import load_dotenv
-import connect_db
+import core.connect_db as connect_db
 import gspread
-import binance_get
+import core.binance_get as binance_get
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 

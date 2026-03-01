@@ -1,5 +1,7 @@
-import connect_db
-import binance_get
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import core.connect_db as connect_db
+import core.binance_get as binance_get
 import os
 from dotenv import load_dotenv
 import logging

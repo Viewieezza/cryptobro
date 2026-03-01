@@ -1,9 +1,11 @@
 """
 Morpho → Google Sheet "Morpho"
-ดึง Current Balance จาก contract (balanceOf → convertToAssets) แล้วเขียนเฉพาะ A–D และ F
-ไม่แตะ E, G–K (ไม่ยุ่ง column อื่น)
+ดึง Current Balance จาก on-chain (ทุก vault รวมกัน) แล้วเขียนเฉพาะ A–D และ F
+ไม่แตะ E, G–K
 """
-import os
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 import json
 import base64
 import logging
@@ -32,11 +34,6 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 WORKSHEET_TITLE = "Morpho"
-MORPHO_CONTRACT = "0xf42bca228D9bd3e2F8EE65Fec3d21De1063882d4"
-WALLET = "0x68Bc6dCb7793369a59289ddc5479F6DF417975E7"
-RPC = os.getenv("ETH_RPC_URL") or os.getenv("ETHEREUM_RPC_URL") or "https://ethereum.publicnode.com"
-RPC_TIMEOUT = 15
-DECIMALS = 18
 
 try:
     spreadsheet = client.open_by_key(google_sheet_id)
@@ -51,29 +48,6 @@ except gspread.exceptions.WorksheetNotFound:
 
 def _gmt7_date():
     return (datetime.now(timezone.utc) + timedelta(hours=7)).strftime("%Y-%m-%d")
-
-
-def get_morpho_current_balance():
-    """ดึง Current Balance (convertToAssets(balanceOf)) จาก Morpho contract. คืนค่า float หรือ None."""
-    try:
-        from web3 import Web3
-        w3 = Web3(Web3.HTTPProvider(RPC, request_kwargs={"timeout": RPC_TIMEOUT}))
-        if not w3.is_connected():
-            logging.warning("เชื่อม RPC ไม่ได้")
-            return None
-        wallet = Web3.to_checksum_address(WALLET)
-        contract_addr = Web3.to_checksum_address(MORPHO_CONTRACT)
-        abi = [
-            {"inputs": [{"name": "account", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
-            {"inputs": [{"name": "shares", "type": "uint256"}], "name": "convertToAssets", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
-        ]
-        c = w3.eth.contract(address=contract_addr, abi=abi)
-        balance_raw = c.functions.balanceOf(wallet).call()
-        assets_raw = c.functions.convertToAssets(balance_raw).call()
-        return assets_raw / (10 ** DECIMALS)
-    except Exception as e:
-        logging.error(f"get_morpho_current_balance: {e}")
-        return None
 
 
 def get_existing_dates():
@@ -115,14 +89,19 @@ def append_row(current_balance: float):
     row_num = find_next_row()
     sheet.update(range_name=f"A{row_num}:D{row_num}", values=[[date_str, "Morpho", "Ethereum", "USDT"]], value_input_option="USER_ENTERED")
     sheet.update(range_name=f"F{row_num}", values=[[round(current_balance, 2)]], value_input_option="USER_ENTERED")
-    logging.info(f"Appended row {row_num}: {date_str} — Current Balance {current_balance:,.2f}")
+    logging.info(f"Appended row {row_num}: {date_str} — Current Balance ${current_balance:,.2f}")
 
 
 if __name__ == "__main__":
-    logging.info("Morpho → Sheet")
-    balance = get_morpho_current_balance()
-    if balance is not None:
-        append_row(balance)
+    from defi.morpho_balance import get_all_balances
+
+    logging.info("Morpho → Sheet [on-chain, all vaults]")
+    data = get_all_balances()
+    if data and data["total_usd"] > 0:
+        for v in data["vaults"]:
+            if v["assets"] > 0:
+                logging.info(f"  {v['name']}: ${v['assets']:,.2f} {v['asset_symbol']}")
+        append_row(data["total_usd"])
         logging.info("Done.")
     else:
-        logging.error("ไม่สามารถดึง Current Balance ได้")
+        logging.error("ไม่สามารถดึง Current Balance ได้ หรือ balance = 0")

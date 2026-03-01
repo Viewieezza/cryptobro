@@ -9,7 +9,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('scheduler.log'),
+        logging.FileHandler('logs/scheduler.log'),
         logging.StreamHandler()
     ]
 )
@@ -58,7 +58,7 @@ def run_db_staking_wallet():
     """Run the db_staking_wallet.py script"""
     try:
         logging.info("Starting db_staking_wallet.py execution...")
-        result = subprocess.run(["python", "db_staking_wallet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "db/db_staking_wallet.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"db_staking_wallet.py output:\n{result.stdout}")
@@ -75,7 +75,7 @@ def run_staking_wallet_updater():
     """Run the staking_wallet_updater.py script"""
     try:
         logging.info("Starting staking_wallet_updater.py execution...")
-        result = subprocess.run(["python", "staking_wallet_updater.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/staking_wallet_updater.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"staking_wallet_updater.py output:\n{result.stdout}")
@@ -92,7 +92,7 @@ def run_db_deposit_withdraw_history():
     """Run the db_deposit_withdraw_history.py script"""
     try:
         logging.info("Starting db_deposit_withdraw_history.py execution...")
-        result = subprocess.run(["python", "db_deposit_withdraw_history.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "db/db_deposit_withdraw_history.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"db_deposit_withdraw_history.py output:\n{result.stdout}")
@@ -109,7 +109,7 @@ def run_deposit_withdraw_sheet_updater():
     """Run the deposit_withdraw_sheet_updater.py script"""
     try:
         logging.info("Starting deposit_withdraw_sheet_updater.py execution...")
-        result = subprocess.run(["python", "deposit_withdraw_sheet_updater.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/deposit_withdraw_sheet_updater.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"deposit_withdraw_sheet_updater.py output:\n{result.stdout}")
@@ -126,7 +126,7 @@ def run_alp_price_scraper():
     """Run the alp_price_scraper.py script"""
     try:
         logging.info("Starting alp_price_scraper.py execution...")
-        result = subprocess.run(["python", "alp_price_scraper.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "defi/alp_price_scraper.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"alp_price_scraper.py output:\n{result.stdout}")
@@ -143,7 +143,7 @@ def run_edgex_google_sheet():
     """Run the edgex_google_sheet.py script"""
     try:
         logging.info("Starting edgex_google_sheet.py execution...")
-        result = subprocess.run(["python", "edgex_google_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/edgex_google_sheet.py"], capture_output=True, text=True)
         
         if result.stdout:
             logging.info(f"edgex_google_sheet.py output:\n{result.stdout}")
@@ -160,7 +160,7 @@ def run_update_llp_sheet():
     """Run the update_llp_sheet.py script"""
     try:
         logging.info("Starting update_llp_sheet.py execution...")
-        result = subprocess.run(["python", "update_llp_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/update_llp_sheet.py"], capture_output=True, text=True)
 
         if result.stdout:
             logging.info(f"update_llp_sheet.py output:\n{result.stdout}")
@@ -178,7 +178,7 @@ def run_update_worldlib_sheet():
     """Run the update_worldlib_sheet.py script (WLFI → Google Sheet Worldlib)"""
     try:
         logging.info("Starting update_worldlib_sheet.py execution...")
-        result = subprocess.run(["python", "update_worldlib_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/update_worldlib_sheet.py"], capture_output=True, text=True)
         if result.stdout:
             logging.info(f"update_worldlib_sheet.py output:\n{result.stdout}")
         if result.stderr:
@@ -192,7 +192,7 @@ def run_update_sky_money_sheet():
     """Run the update_sky_money_sheet.py script (Sky Money stUSDT → Google Sheet 'Sky Money')"""
     try:
         logging.info("Starting update_sky_money_sheet.py execution...")
-        result = subprocess.run(["python", "update_sky_money_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/update_sky_money_sheet.py"], capture_output=True, text=True)
         if result.stdout:
             logging.info(f"update_sky_money_sheet.py output:\n{result.stdout}")
         if result.stderr:
@@ -206,7 +206,7 @@ def run_update_morpho_sheet():
     """Run the update_morpho_sheet.py script (Morpho → Google Sheet 'Morpho'). Writes only A–D and F; does not touch E, G–K."""
     try:
         logging.info("Starting update_morpho_sheet.py execution...")
-        result = subprocess.run(["python", "update_morpho_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/update_morpho_sheet.py"], capture_output=True, text=True)
         if result.stdout:
             logging.info(f"update_morpho_sheet.py output:\n{result.stdout}")
         if result.stderr:
@@ -220,7 +220,7 @@ def run_update_gs_sheet():
     """Run the update_gs_sheet.py script (GS → Google Sheet worksheet 'nvodyo8iy'). เริ่มเที่ยงคืน GMT+7. Writes only A–D and F."""
     try:
         logging.info("Starting update_gs_sheet.py execution...")
-        result = subprocess.run(["python", "update_gs_sheet.py"], capture_output=True, text=True)
+        result = subprocess.run(["python", "sheets/update_gs_sheet.py"], capture_output=True, text=True)
         if result.stdout:
             logging.info(f"update_gs_sheet.py output:\n{result.stdout}")
         if result.stderr:
@@ -255,25 +255,23 @@ def main():
     logging.info(f"update_gs_sheet.py (nvodyo8iy) will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
-    schedule.every(60).minutes.do(run_worker_server)
+    # schedule.every(60).minutes.do(run_worker_server)
     
     # Schedule all scripts to run at 23:00 GMT+7 (converted to local time)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_staking_wallet)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_staking_wallet_updater)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_db_deposit_withdraw_history)
-    schedule.every().day.at(local_time_23_00_gmt7).do(run_deposit_withdraw_sheet_updater)
+    # schedule.every().day.at(local_time_23_00_gmt7).do(run_db_staking_wallet)
+    # schedule.every().day.at(local_time_23_00_gmt7).do(run_staking_wallet_updater)
+    # schedule.every().day.at(local_time_23_00_gmt7).do(run_db_deposit_withdraw_history)
+    # schedule.every().day.at(local_time_23_00_gmt7).do(run_deposit_withdraw_sheet_updater)
     
     # Schedule ALP price scraper to run daily at 00:00 GMT+7
-    schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
+    # schedule.every().day.at(local_time_00_00_gmt7).do(run_alp_price_scraper)
     # Schedule Sky Money stUSDT sheet update to run daily at 00:00 GMT+7
     schedule.every().day.at(local_time_00_00_gmt7).do(run_update_sky_money_sheet)
     # Schedule Morpho sheet update at 00:00 GMT+7 (only A–D and F; does not touch other columns)
     schedule.every().day.at(local_time_00_00_gmt7).do(run_update_morpho_sheet)
-    # Schedule GS → sheet nvodyo8iy เริ่มเที่ยงคืน GMT+7 (only A–D and F)
-    schedule.every().day.at(local_time_00_00_gmt7).do(run_update_gs_sheet)
     
     # Schedule EdgeX Google Sheet to run daily at 08:00 GMT+7
-    schedule.every().day.at(local_time_08_00_gmt7).do(run_edgex_google_sheet)
+    #schedule.every().day.at(local_time_08_00_gmt7).do(run_edgex_google_sheet)
     
     # Schedule update_llp_sheet.py to run daily at 05:00 GMT+7 (ตี 5)
     schedule.every().day.at(local_time_05_00_gmt7).do(run_update_llp_sheet)
@@ -282,9 +280,13 @@ def main():
 
     # Run immediately on startup
     logging.info("Running initial execution...")
-    run_worker_server()
-    run_alp_price_scraper()
-    run_edgex_google_sheet()
+    #run_worker_server()
+    #run_alp_price_scraper()
+    #run_edgex_google_sheet()
+    run_update_llp_sheet()
+    run_update_worldlib_sheet()
+    run_update_sky_money_sheet()
+    run_update_morpho_sheet()
     
     # Keep the scheduler running
     while True:

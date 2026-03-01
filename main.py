@@ -12,8 +12,8 @@ def run_script(script_name):
 
 def main():
     scripts = [
-        "cc_wallet_6165.py",
-        "cc_wallet_1945.py"
+        "wallets/cc_wallet_6165.py",
+        "wallets/cc_wallet_1945.py"
     ]
 
     for script in scripts:

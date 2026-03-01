@@ -6,8 +6,9 @@ This script checks what endpoints your BTSE API key has access to
 and provides guidance on how to enable access to earn positions.
 """
 
-import os
-from btse_client import BTSEClient, BTSEError, ConfigError
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from exchanges.btse_client import BTSEClient, BTSEError, ConfigError
 
 def main():
     """Check API permissions and provide guidance"""

@@ -15,7 +15,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('alp_price_scraper.log'),
+        logging.FileHandler(os.path.join(os.path.dirname(__file__), '..', 'logs', 'alp_price_scraper.log')),
         logging.StreamHandler()
     ]
 )

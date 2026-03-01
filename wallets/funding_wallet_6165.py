@@ -1,9 +1,10 @@
-import os
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from dotenv import load_dotenv
 import logging
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from binance_get import get_asset_price, get_coinm_position_risk
+from core.binance_get import get_asset_price, get_coinm_position_risk
 import time
 import base64
 import json
@@ -15,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('cc_wallet_6165.log'),
+        logging.FileHandler(os.path.join(os.path.dirname(__file__), '..', 'logs', 'cc_wallet_6165.log')),
         logging.StreamHandler()
     ]
 )
