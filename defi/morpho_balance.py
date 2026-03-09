@@ -28,6 +28,12 @@ VAULTS = [
         "asset_symbol": "USDT",
         "asset_decimals": 6,
     },
+    {
+        "name": "sky.money USDT Savings",
+        "address": "0x23f5E9c35820f4baB695Ac1F19c203cC3f8e1e11",
+        "asset_symbol": "USDT",
+        "asset_decimals": 6,
+    },
 ]
 
 VAULT_ABI = [
