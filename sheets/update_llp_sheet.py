@@ -208,53 +208,20 @@ def fetch_lighter_data():
         except (TypeError, ValueError):
             pass
 
-    # Column H: Lighter (LIT) price — ลองหลาย endpoint
+    # Column H: LIT price — Fetch from OKX using ccxt
     price = 0.0
-    def _parse_price(j):
-        if isinstance(j, dict):
-            asks = j.get("asks") or j.get("data", {}).get("asks") or []
-            bids = j.get("bids") or j.get("data", {}).get("bids") or []
-            if asks and bids:
-                a0, b0 = asks[0], bids[0]
-                ap = a0.get("price") if isinstance(a0, dict) else (a0[0] if isinstance(a0, (list, tuple)) else 0)
-                bp = b0.get("price") if isinstance(b0, dict) else (b0[0] if isinstance(b0, (list, tuple)) else 0)
-                return (float(ap) + float(bp)) / 2
-            for key in ("last", "price", "close", "lastPrice"):
-                v = j.get(key) or (j.get("data") or {}).get(key)
-                if v is not None:
-                    return float(v)
-            tickers = j.get("tickers") or j.get("data") or []
-            if isinstance(tickers, list):
-                for t in tickers:
-                    if isinstance(t, dict) and (t.get("market_id") == market_id or t.get("marketId") == market_id):
-                        return float(t.get("last") or t.get("price") or t.get("close") or 0)
-        if isinstance(j, list) and len(j) > 0:
-            c = j[0]
-            if isinstance(c, dict):
-                return float(c.get("c") or c.get("close") or 0)
-        return None
-    for path, q in [
-        (f"{BASE_URL}/api/v1/orderBook", {"market_id": market_id}),
-        (f"{BASE_URL}/api/v1/order_book", {"market_id": market_id}),
-        (f"{BASE_URL}/api/v1/ticker", {"market_id": market_id}),
-        (f"{BASE_URL}/api/v1/tickers", None),
-        (f"{BASE_URL}/api/v1/candlesticks", {"market_id": market_id, "resolution": "1D", "limit": 1}),
-        (f"{BASE_URL}/api/v1/candlesticks", {"symbol": "LIT-USDC", "resolution": "1D", "limit": 1}),
-        (f"{BASE_URL}/api/v1/candlesticks", {"symbol": "Lighter-USDC", "resolution": "1D", "limit": 1}),
-    ]:
-        rr = _get(path, params=q or {}, timeout=12)
-        if rr and rr.status_code == 200:
-            try:
-                j = rr.json()
-                p = _parse_price(j)
-                if p is not None and p > 0:
-                    price = p
-                    logging.info(f"Lighter price from API: {price} (path={path})")
-                    break
-            except Exception:
-                pass
-        if price > 0:
-            break
+    try:
+        import ccxt
+        exchange = ccxt.okx()
+        ticker = exchange.fetch_ticker('LIT/USDT')
+        if ticker and 'last' in ticker and ticker['last'] is not None:
+            price = float(ticker['last'])
+            logging.info(f"LIT price from ccxt (OKX): {price}")
+        else:
+            logging.warning("Could not parse LIT price from ccxt (OKX) ticker")
+    except Exception as e:
+        logging.error(f"Error fetching LIT price via ccxt from OKX: {e}")
+
     if price <= 0 and short_entry > 0:
         price = short_entry
         logging.info(f"Lighter price fallback to short_entry: {price}")
