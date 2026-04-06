@@ -129,8 +129,10 @@ def fetch_lighter_data():
             short_position_value = float(pos.get("position_value") or 0)
             break
 
+    lit_asset_id = None
     for asset in acc.get("assets") or []:
         if "LIT" in (asset.get("symbol") or ""):
+            lit_asset_id = asset.get("asset_id")
             spot_qty = float(asset.get("balance") or 0)
             break
 
@@ -157,6 +159,17 @@ def fetch_lighter_data():
         elif pid == OTHER_POOL_ID:
             other_pool_shares = shares_amt
             other_pool_principal = principal
+
+    # Fallback to pending_unlocks for LIT pool if no shares were found
+    if lit_pool_shares is None and lit_asset_id is not None:
+        for pu in acc.get("pending_unlocks") or []:
+            if pu.get("asset_index") == lit_asset_id:
+                amount_str = pu.get("amount") or "0"
+                try:
+                    lit_pool_principal = float(amount_str)
+                    logging.info(f"LIT pool shares not found. Using pending_unlocks amount: {lit_pool_principal}")
+                except (ValueError, TypeError):
+                    pass
 
     def _pool_value_from_share_price(pool_id, shares_amount):
         if pool_id is None:
