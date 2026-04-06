@@ -39,8 +39,8 @@ RPC = os.getenv("ETH_RPC_URL2") or os.getenv("ETH_RPC_URL") or "https://ethereum
 RPC_TIMEOUT = 30
 
 # วันแรกที่ฝาก: Feb-01-2026 13:48:47 UTC
-DEPOSIT_TS = int(datetime(2026, 2, 1, 13, 48, 47, tzinfo=timezone.utc).timestamp())
-DEPOSIT_DATE = datetime(2026, 2, 1, tzinfo=timezone.utc)
+DEPOSIT_TS = int(datetime(2026, 3, 30, 13, 12, 35, tzinfo=timezone.utc).timestamp())
+DEPOSIT_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
 
 # Google Sheet
 WORKSHEET_TITLE = "test_Worldlib"

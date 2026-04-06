@@ -115,7 +115,8 @@ def fetch_lighter_data():
     short_qty = 0.0
     short_entry = 0.0
     short_pnl = 0.0
-    short_position_value = 0.0
+    lighter_lit_price = 0.0
+    total_asset_val = float(acc.get("total_asset_value") or 0)
     market_id = 120
 
     for pos in acc.get("positions") or []:
@@ -126,7 +127,12 @@ def fetch_lighter_data():
             short_qty = abs(size) if sign < 0 else 0
             short_entry = float(pos.get("avg_entry_price") or 0)
             short_pnl = float(pos.get("unrealized_pnl") or 0)
-            short_position_value = float(pos.get("position_value") or 0)
+            
+            raw_pos_val = float(pos.get("position_value") or 0)
+            if size != 0:
+                lighter_lit_price = raw_pos_val / abs(size)
+                
+            # We don't save pos.get("position_value") anymore, because we will pass total_asset_val instead
             break
 
     lit_asset_id = None
@@ -235,9 +241,13 @@ def fetch_lighter_data():
     except Exception as e:
         logging.error(f"Error fetching LIT price via ccxt from OKX: {e}")
 
-    if price <= 0 and short_entry > 0:
-        price = short_entry
-        logging.info(f"Lighter price fallback to short_entry: {price}")
+    if price <= 0:
+        if lighter_lit_price > 0:
+            price = lighter_lit_price
+            logging.info(f"Lighter price fallback to position mark price: {price}")
+        elif short_entry > 0:
+            price = short_entry
+            logging.info(f"Lighter price fallback to short_entry: {price}")
 
     tz = pytz.timezone("Asia/Bangkok")
     now_str = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
@@ -250,7 +260,7 @@ def fetch_lighter_data():
         "short_qty": round(short_qty, 2),
         "short_entry": round(short_entry, 4),
         "short_pnl": round(short_pnl, 2),
-        "short_position_value": round(short_position_value, 2),
+        "short_position_value": round(total_asset_val, 2),
     }
 
 
