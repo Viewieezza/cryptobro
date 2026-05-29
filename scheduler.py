@@ -229,6 +229,20 @@ def run_update_gs_sheet():
         logging.error(f"Error running update_gs_sheet.py: {e}")
 
 
+def run_update_usdai_sheet():
+    """Run the update_usdai_sheet.py script (USD.AI → Google Sheet 'USD.ai')"""
+    try:
+        logging.info("Starting update_usdai_sheet.py execution...")
+        result = subprocess.run(["python", "sheets/update_usdai_sheet.py"], capture_output=True, text=True)
+        if result.stdout:
+            logging.info(f"update_usdai_sheet.py output:\n{result.stdout}")
+        if result.stderr:
+            logging.warning(f"update_usdai_sheet.py stderr:\n{result.stderr}")
+        logging.info("update_usdai_sheet.py execution completed successfully")
+    except Exception as e:
+        logging.error(f"Error running update_usdai_sheet.py: {e}")
+
+
 def main():
     # Calculate local time equivalent to 23:00 GMT+7
     local_time_23_00_gmt7 = get_local_time_for_gmt_plus_7(23, 0)
@@ -252,6 +266,7 @@ def main():
     logging.info(f"update_sky_money_sheet.py will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     logging.info(f"update_morpho_sheet.py will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     logging.info(f"update_gs_sheet.py (nvodyo8iy) will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
+    logging.info(f"update_usdai_sheet.py will run daily at 00:00 GMT+7 (which is {local_time_00_00_gmt7} local time)")
     
     # Schedule the job to run every 60 minutes
     # schedule.every(60).minutes.do(run_worker_server)
@@ -268,6 +283,8 @@ def main():
     schedule.every().day.at(local_time_00_00_gmt7).do(run_update_sky_money_sheet)
     # Schedule Morpho sheet update at 00:00 GMT+7 (only A–D and F; does not touch other columns)
     schedule.every().day.at(local_time_00_00_gmt7).do(run_update_morpho_sheet)
+    # Schedule USD.AI sheet update at 00:00 GMT+7 (only A–D and F)
+    schedule.every().day.at(local_time_00_00_gmt7).do(run_update_usdai_sheet)
     
     # Schedule EdgeX Google Sheet to run daily at 08:00 GMT+7
     #schedule.every().day.at(local_time_08_00_gmt7).do(run_edgex_google_sheet)
@@ -286,6 +303,7 @@ def main():
     run_update_worldlib_sheet()
     run_update_sky_money_sheet()
     run_update_morpho_sheet()
+    run_update_usdai_sheet()
     
     # Keep the scheduler running
     while True:
