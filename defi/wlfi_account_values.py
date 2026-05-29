@@ -28,7 +28,7 @@ RPC_TIMEOUT = 15
 VALUE_DECIMALS = 36  # dYdX-style margin protocol uses 36 decimals for USD values
 
 
-def get_account_values():
+def get_account_values(wallet_address=None):
     """
     เรียก getAccountValues((address,uint256)) จาก WLFI contract
     Returns: dict with supply_value_usd and borrow_value_usd, or None
@@ -47,9 +47,11 @@ def get_account_values():
         # subAccountId: bytes32 → uint256
         sub_id = int(SUB_ACCOUNT_ID[2:], 16)
 
+        target_wallet = wallet_address or WALLET
+
         # getAccountValues((address,uint256)) → selector 0x124f914c
         selector = Web3.keccak(text="getAccountValues((address,uint256))")[:4]
-        encoded = encode(["(address,uint256)"], [(WALLET, sub_id)])
+        encoded = encode(["(address,uint256)"], [(target_wallet, sub_id)])
         calldata = selector + encoded
 
         result = w3.eth.call({
@@ -81,7 +83,7 @@ def get_account_values():
         return None
 
 
-def get_account_balances():
+def get_account_balances(wallet_address=None):
     """
     เรียก getAccountBalances((address,uint256)) → ดู balance แยกตาม market
     Returns: raw result bytes หรือ None
@@ -98,9 +100,11 @@ def get_account_balances():
         contract_addr = Web3.to_checksum_address(WLFI_CONTRACT)
         sub_id = int(SUB_ACCOUNT_ID[2:], 16)
 
+        target_wallet = wallet_address or WALLET
+
         # getAccountBalances((address,uint256)) → selector 0x6a8194e7
         selector = bytes.fromhex("6a8194e7")
-        encoded = encode(["(address,uint256)"], [(WALLET, sub_id)])
+        encoded = encode(["(address,uint256)"], [(target_wallet, sub_id)])
         calldata = selector + encoded
 
         result = w3.eth.call({
