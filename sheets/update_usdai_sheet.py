@@ -15,7 +15,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -36,6 +36,8 @@ def main():
     # --- Google Sheets Setup ---
     credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     google_sheet_id = os.getenv("GOOGLE_SHEET_ID")
+    if google_sheet_id:
+        google_sheet_id = google_sheet_id.replace(" ", "").strip()
     if not credentials_base64 or not google_sheet_id:
         logging.error("GOOGLE_APPLICATION_CREDENTIALS และ GOOGLE_SHEET_ID ต้องตั้งใน .env")
         return
