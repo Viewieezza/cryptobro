@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +30,7 @@ logging.basicConfig(
 # ──────────────────────────────────────────────
 # Config
 # ──────────────────────────────────────────────
-WALLET = os.getenv("WALLET_ADDRESS", "0x68Bc6dCb7793369a59289ddc5479F6DF417975E7")
+WALLET = "0x68Bc6dCb7793369a59289ddc5479F6DF417975E7"
 STUSDT_CONTRACT = "0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9"
 DECIMALS = 18
 
@@ -61,7 +61,7 @@ STUSDT_ABI = [
 ]
 
 # Google Sheet
-WORKSHEET_TITLE = "test_SkyMoney"
+WORKSHEET_TITLE = "Sky Money"
 DEFAULT_HEADERS = [
     "Date", "Protocol", "Chain", "Asset",
     "Initial Deposit", "Current Balance", "Incentive Received",
@@ -77,6 +77,8 @@ def _get_sheet():
 
     credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     google_sheet_id = os.getenv("GOOGLE_SHEET_ID")
+    if google_sheet_id:
+        google_sheet_id = google_sheet_id.replace(" ", "").strip()
     if not credentials_base64:
         raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set")
     if not google_sheet_id:
@@ -133,11 +135,30 @@ def _get_w3():
     return w3
 
 
-def _find_block_by_timestamp(w3, target_ts):
+def _find_block_by_timestamp(w3, target_ts, est_block=None):
     """Binary search หา block ที่ timestamp ใกล้เคียง target_ts ที่สุด"""
-    lo = 1
-    hi = w3.eth.block_number
+    latest_block = w3.eth.block_number
+    if est_block is not None:
+        # Search in a narrow range around the estimated block (+/- 15,000 blocks)
+        lo = max(1, est_block - 15000)
+        hi = min(latest_block, est_block + 15000)
+        try:
+            lo_ts = w3.eth.get_block(lo)["timestamp"]
+            hi_ts = w3.eth.get_block(hi)["timestamp"]
+            if lo_ts <= target_ts <= hi_ts:
+                while lo < hi:
+                    mid = (lo + hi) // 2
+                    block = w3.eth.get_block(mid)
+                    if block["timestamp"] < target_ts:
+                        lo = mid + 1
+                    else:
+                        hi = mid
+                return lo
+        except Exception:
+            pass
 
+    lo = 1
+    hi = latest_block
     while lo < hi:
         mid = (lo + hi) // 2
         block = w3.eth.get_block(mid)
@@ -222,14 +243,21 @@ def main():
     logging.info(f"Days to backfill: {len(to_process)}")
     print()
 
+    # --- Find Start Block for Estimation ---
+    start_ts = daily_dates[0][1]
+    logging.info(f"Finding first block for start date {daily_dates[0][0]} (timestamp={start_ts}) ...")
+    start_block = _find_block_by_timestamp(w3, start_ts)
+    logging.info(f"Start block found: {start_block}")
+
     # --- Backfill ---
     rows_to_write = []
 
     for i, (date_str, target_ts) in enumerate(to_process):
         logging.info(f"[{i+1}/{len(to_process)}] {date_str} — finding block for ts={target_ts} ...")
 
-        # Find block
-        block_num = _find_block_by_timestamp(w3, target_ts)
+        # Find block with estimation
+        est_block = start_block + int((target_ts - start_ts) / 12.0)
+        block_num = _find_block_by_timestamp(w3, target_ts, est_block=est_block)
         block = w3.eth.get_block(block_num)
         actual_ts = block["timestamp"]
         actual_dt = datetime.fromtimestamp(actual_ts, tz=timezone.utc)

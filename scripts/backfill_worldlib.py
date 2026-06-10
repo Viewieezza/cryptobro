@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,7 +43,7 @@ DEPOSIT_TS = int(datetime(2026, 3, 30, 13, 12, 35, tzinfo=timezone.utc).timestam
 DEPOSIT_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
 
 # Google Sheet
-WORKSHEET_TITLE = "test_Worldlib"
+WORKSHEET_TITLE = "Worldlib"
 DEFAULT_HEADERS = [
     "Date", "Protocol", "Chain", "Asset",
     "Initial Deposit", "Current Balance", "Incentive Received",
@@ -62,6 +62,8 @@ def _get_sheet():
 
     credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     google_sheet_id = os.getenv("GOOGLE_SHEET_ID")
+    if google_sheet_id:
+        google_sheet_id = google_sheet_id.replace(" ", "").strip()
     if not credentials_base64:
         raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set")
     if not google_sheet_id:
